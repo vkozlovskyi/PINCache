@@ -222,6 +222,7 @@ typedef id __nullable (^PINCacheReadBlock)(PINCache *cache, NSString *key, NSURL
  */
 - (void)setObject:(id)object forKey:(NSString *)key writeBlock:(nullable PINCacheWriteBlock)writeBlock;
 
+- (void)setObjectAtURL:(NSURL *)URL forKey:(NSString *)key copy:(BOOL)copy;
 /**
  Removes the object for the specified key. This method blocks the calling thread until the object
  has been removed.

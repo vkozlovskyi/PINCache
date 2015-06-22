@@ -338,7 +338,7 @@ NSString * const PINCacheSharedName = @"PINCacheShared";
     } else {
         PINDiskCacheReadBlock diskReadBlock = nil;
         if (readBlock) {
-            diskReadBlock = ^id (PINDiskCache *cache, NSString *diskKey, NSURL *fileURL){
+            diskReadBlock = ^id (PINDiskCache *cache, NSString *diskKey, NSURL *fileURL) {
                 return readBlock(self, key, fileURL);
             };
         }
@@ -364,11 +364,32 @@ NSString * const PINCacheSharedName = @"PINCacheShared";
 
     PINDiskCacheWriteBlock diskWriteBlock = nil;
     if (writeBlock) {
-        diskWriteBlock = ^BOOL (PINDiskCache *cache, NSString *diskKey, NSURL *fileURL, id diskObject){
+        diskWriteBlock = ^BOOL (PINDiskCache *cache, NSString *diskKey, NSURL *fileURL, id diskObject) {
             return writeBlock(self, key, fileURL, object);
         };
     }
     [_diskCache setObject:object forKey:key writeBlock:diskWriteBlock];
+}
+
+- (void)setObjectAtURL:(NSURL *)URL forKey:(NSString *)key copy:(BOOL)copy
+{
+    if (!key || !URL)
+        return;
+    
+    PINDiskCacheWriteBlock writeBlock = ^BOOL (PINDiskCache *cache, NSString *diskKey, NSURL *fileURL, id diskObject) {
+        NSFileManager *manager = [NSFileManager defaultManager];
+        [manager removeItemAtURL:fileURL error:nil];
+        
+        BOOL result = NO;
+        if (copy) {
+            result = [manager copyItemAtURL:URL toURL:fileURL error:nil];
+        } else {
+            result = [manager moveItemAtURL:URL toURL:fileURL error:nil];
+        }
+        
+        return result;
+    };
+    [_diskCache setObject:URL forKey:key writeBlock:writeBlock];
 }
 
 - (void)removeObjectForKey:(NSString *)key
