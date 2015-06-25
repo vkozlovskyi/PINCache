@@ -267,6 +267,11 @@ NSString * const PINCacheSharedName = @"PINCacheShared";
 
 - (void)trimToDate:(NSDate *)date block:(PINCacheBlock)block
 {
+    [self trimObjectsForKeys:nil toDate:date block:block];
+}
+
+- (void)trimObjectsForKeys:(NSArray *)keys toDate:(NSDate *)date block:(nullable PINCacheBlock)block
+{
     if (!date)
         return;
     
@@ -289,7 +294,7 @@ NSString * const PINCacheSharedName = @"PINCacheShared";
     }
     
     [_memoryCache trimToDate:date block:memBlock];
-    [_diskCache trimToDate:date block:diskBlock];
+    [_diskCache trimObjectsForKeys:keys toDate:date block:diskBlock];
     
     if (group) {
         __weak PINCache *weakSelf = self;
@@ -401,13 +406,18 @@ NSString * const PINCacheSharedName = @"PINCacheShared";
     [_diskCache removeObjectForKey:key];
 }
 
-- (void)trimToDate:(NSDate *)date
+- (void)trimObjectsForKeys:(NSArray * __nullable)keys toDate:(NSDate *)date
 {
     if (!date)
         return;
     
     [_memoryCache trimToDate:date];
-    [_diskCache trimToDate:date];
+    [_diskCache trimObjectsForKeys:keys toDate:date];
+}
+
+- (void)trimToDate:(NSDate *)date
+{
+    [self trimObjectsForKeys:nil toDate:date];
 }
 
 - (void)removeAllObjects

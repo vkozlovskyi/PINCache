@@ -168,6 +168,7 @@ typedef id __nullable (^PINCacheReadBlock)(PINCache *cache, NSString *key, NSURL
  @param block A block to be executed concurrently after the cache has been trimmed, or nil.
  */
 - (void)trimToDate:(NSDate *)date block:(nullable PINCacheBlock)block;
+- (void)trimObjectsForKeys:(NSArray * __nullable)keys toDate:(NSDate *)date block:(nullable PINCacheBlock)block;
 
 /**
  Removes all objects from the cache.This method returns immediately and executes the passed block after the
@@ -240,6 +241,7 @@ typedef id __nullable (^PINCacheReadBlock)(PINCache *cache, NSString *key, NSURL
  @param date Objects that haven't been accessed since this date are removed from the cache.
  */
 - (void)trimToDate:(NSDate *)date;
+- (void)trimObjectsForKeys:(NSArray * __nullable)keys toDate:(NSDate *)date;
 
 /**
  Removes all objects from the cache. This method blocks the calling thread until the cache has been cleared.

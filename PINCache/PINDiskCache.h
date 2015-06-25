@@ -261,6 +261,8 @@ typedef id __nullable (^PINDiskCacheReadBlock)(PINDiskCache *cache, NSString *ke
  */
 - (void)trimToDate:(NSDate *)date block:(nullable PINDiskCacheBlock)block;
 
+- (void)trimObjectsForKeys:(NSArray * __nullable)keys toDate:(NSDate *)date block:(nullable PINDiskCacheBlock)block;
+
 /**
  Removes objects from the cache, largest first, until the cache is equal to or smaller than the specified byteCount.
  This method returns immediately and executes the passed block as soon as the cache has been trimmed.
@@ -380,6 +382,7 @@ typedef id __nullable (^PINDiskCacheReadBlock)(PINDiskCache *cache, NSString *ke
  @param date Objects that haven't been accessed since this date are removed from the cache.
  */
 - (void)trimToDate:(nullable NSDate *)date;
+- (void)trimObjectsForKeys:(NSArray * __nullable)keys toDate:(NSDate * __nullable)date;
 
 /**
  Removes objects from the cache, largest first, until the cache is equal to or smaller than the
