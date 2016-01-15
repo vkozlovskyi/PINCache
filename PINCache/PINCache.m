@@ -267,6 +267,11 @@ NSString * const PINCacheSharedName = @"PINCacheShared";
 
 - (void)trimToDate:(NSDate *)date block:(PINCacheBlock)block
 {
+    [self trimObjectsForKeys:nil toDate:date block:block];
+}
+
+- (void)trimObjectsForKeys:(NSArray *)keys toDate:(NSDate *)date block:(nullable PINCacheBlock)block
+{
     if (!date)
         return;
     
@@ -289,7 +294,7 @@ NSString * const PINCacheSharedName = @"PINCacheShared";
     }
     
     [_memoryCache trimToDate:date block:memBlock];
-    [_diskCache trimToDate:date block:diskBlock];
+    [_diskCache trimObjectsForKeys:keys toDate:date block:diskBlock];
     
     if (group) {
         __weak PINCache *weakSelf = self;
@@ -338,7 +343,7 @@ NSString * const PINCacheSharedName = @"PINCacheShared";
     } else {
         PINDiskCacheReadBlock diskReadBlock = nil;
         if (readBlock) {
-            diskReadBlock = ^id (PINDiskCache *cache, NSString *key, NSURL *fileURL){
+            diskReadBlock = ^id (PINDiskCache *cache, NSString *diskKey, NSURL *fileURL) {
                 return readBlock(self, key, fileURL);
             };
         }
@@ -364,11 +369,32 @@ NSString * const PINCacheSharedName = @"PINCacheShared";
 
     PINDiskCacheWriteBlock diskWriteBlock = nil;
     if (writeBlock) {
-        diskWriteBlock = ^BOOL (PINDiskCache *cache, NSString *key, NSURL *fileURL, id diskObject){
+        diskWriteBlock = ^BOOL (PINDiskCache *cache, NSString *diskKey, NSURL *fileURL, id diskObject) {
             return writeBlock(self, key, fileURL, object);
         };
     }
     [_diskCache setObject:object forKey:key writeBlock:diskWriteBlock];
+}
+
+- (void)setObjectAtURL:(NSURL *)URL forKey:(NSString *)key copy:(BOOL)copy
+{
+    if (!key || !URL)
+        return;
+    
+    PINDiskCacheWriteBlock writeBlock = ^BOOL (PINDiskCache *cache, NSString *diskKey, NSURL *fileURL, id diskObject) {
+        NSFileManager *manager = [NSFileManager defaultManager];
+        [manager removeItemAtURL:fileURL error:nil];
+        
+        BOOL result = NO;
+        if (copy) {
+            result = [manager copyItemAtURL:URL toURL:fileURL error:nil];
+        } else {
+            result = [manager moveItemAtURL:URL toURL:fileURL error:nil];
+        }
+        
+        return result;
+    };
+    [_diskCache setObject:URL forKey:key writeBlock:writeBlock];
 }
 
 - (void)removeObjectForKey:(NSString *)key
@@ -380,13 +406,18 @@ NSString * const PINCacheSharedName = @"PINCacheShared";
     [_diskCache removeObjectForKey:key];
 }
 
-- (void)trimToDate:(NSDate *)date
+- (void)trimObjectsForKeys:(NSArray * __nullable)keys toDate:(NSDate *)date
 {
     if (!date)
         return;
     
     [_memoryCache trimToDate:date];
-    [_diskCache trimToDate:date];
+    [_diskCache trimObjectsForKeys:keys toDate:date];
+}
+
+- (void)trimToDate:(NSDate *)date
+{
+    [self trimObjectsForKeys:nil toDate:date];
 }
 
 - (void)removeAllObjects

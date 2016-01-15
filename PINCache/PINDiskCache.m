@@ -146,13 +146,21 @@ NSString * const PINDiskCacheSharedName = @"PINDiskCacheShared";
     if (![string length])
         return @"";
     
+    NSString *stringBase = string.stringByDeletingPathExtension;
+    
     CFStringRef static const charsToEscape = CFSTR(".:/");
-    CFStringRef escapedString = CFURLCreateStringByAddingPercentEscapes(kCFAllocatorDefault,
-                                                                        (__bridge CFStringRef)string,
+    CFStringRef escapedBase = CFURLCreateStringByAddingPercentEscapes(kCFAllocatorDefault,
+                                                                        (__bridge CFStringRef)stringBase,
                                                                         NULL,
                                                                         charsToEscape,
                                                                         kCFStringEncodingUTF8);
-    return (__bridge_transfer NSString *)escapedString;
+    
+    NSString *stringExtension = string.pathExtension;
+    if (stringExtension.length > 0) {
+        return [NSString stringWithFormat:@"%@.%@", (__bridge_transfer NSString *)escapedBase, stringExtension];
+    } else {
+        return (__bridge_transfer NSString *)escapedBase;
+    }
 }
 
 - (NSString *)decodedString:(NSString *)string
@@ -370,11 +378,15 @@ NSString * const PINDiskCacheSharedName = @"PINDiskCacheShared";
     }
 }
 
-- (void)trimDiskToDate:(NSDate *)trimDate
+- (void)trimDiskToDate:(NSDate *)trimDate keysFilter:(BOOL (^)(NSString *key))keysFilter
 {
     NSArray *keysSortedByDate = [_dates keysSortedByValueUsingSelector:@selector(compare:)];
     
     for (NSString *key in keysSortedByDate) { // oldest files first
+        if (keysFilter != NULL && !keysFilter(key)) {
+            continue;
+        }
+        
         NSDate *accessDate = [_dates objectForKey:key];
         if (!accessDate)
             continue;
@@ -397,7 +409,7 @@ NSString * const PINDiskCacheSharedName = @"PINDiskCacheShared";
     
     [self lock];
         NSDate *date = [[NSDate alloc] initWithTimeIntervalSinceNow:-ageLimit];
-        [self trimDiskToDate:date];
+        [self trimDiskToDate:date keysFilter:NULL];
     [self unlock];
     
     __weak PINDiskCache *weakSelf = self;
@@ -520,15 +532,20 @@ NSString * const PINDiskCacheSharedName = @"PINDiskCacheShared";
 
 - (void)trimToDate:(NSDate *)trimDate block:(PINDiskCacheBlock)block
 {
+    [self trimObjectsForKeys:nil toDate:trimDate block:block];
+}
+
+- (void)trimObjectsForKeys:(NSArray *)keys toDate:(NSDate *)trimDate block:(nullable PINDiskCacheBlock)block
+{
     __weak PINDiskCache *weakSelf = self;
     
     dispatch_async(_asyncQueue, ^{
         PINDiskCache *strongSelf = weakSelf;
-        [strongSelf trimToDate:trimDate];
+        [strongSelf trimObjectsForKeys:keys toDate:trimDate];
         
         if (block) {
             [strongSelf lock];
-                block(strongSelf);
+            block(strongSelf);
             [strongSelf unlock];
         }
     });
@@ -770,6 +787,11 @@ NSString * const PINDiskCacheSharedName = @"PINDiskCacheShared";
 
 - (void)trimToDate:(NSDate *)trimDate
 {
+    [self trimObjectsForKeys:nil toDate:trimDate];
+}
+
+- (void)trimObjectsForKeys:(NSArray *)keys toDate:(NSDate *)trimDate
+{
     if (!trimDate)
         return;
     
@@ -780,8 +802,16 @@ NSString * const PINDiskCacheSharedName = @"PINDiskCacheShared";
     
     PINCacheStartBackgroundTask();
     
+    BOOL (^filter)(NSString *) = NULL;
+    if (keys.count > 0) {
+        NSSet *keysSet = [[NSSet alloc] initWithArray:keys];
+        filter = ^BOOL (NSString *key) {
+            return [keysSet containsObject:key];
+        };
+    }
+    
     [self lock];
-        [self trimDiskToDate:trimDate];
+    [self trimDiskToDate:trimDate keysFilter:filter];
     [self unlock];
     
     PINCacheEndBackgroundTask();
