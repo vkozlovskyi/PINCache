@@ -345,7 +345,7 @@ typedef id __nullable (^PINDiskCacheReadBlock)(PINDiskCache *cache, NSString *ke
  @param key The key associated with the object.
  @result The file URL for the specified key.
  */
-- (NSURL *)fileURLForKey:(nullable NSString *)key;
+- (nullable NSURL *)fileURLForKey:(nullable NSString *)key;
 
 /**
  Stores an object in the cache for the specified key. This method blocks the calling thread until
