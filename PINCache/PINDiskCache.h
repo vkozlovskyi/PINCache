@@ -152,6 +152,7 @@ typedef id __nullable (^PINDiskCacheReadBlock)(PINDiskCache *cache, NSString *ke
  */
 + (void)emptyTrash;
 
+- (instancetype)init NS_UNAVAILABLE;
 
 /**
  Multiple instances with the same name are allowed and can safely access
@@ -172,7 +173,7 @@ typedef id __nullable (^PINDiskCacheReadBlock)(PINDiskCache *cache, NSString *ke
  @param rootPath The path of the cache.
  @result A new cache with the specified name.
  */
-- (instancetype)initWithName:(NSString *)name rootPath:(NSString *)rootPath NS_DESIGNATED_INITIALIZER;
+- (instancetype)initWithName:(NSString *)name rootPath:(NSString *)rootPath;
 
 #pragma mark -
 /// @name Asynchronous Methods

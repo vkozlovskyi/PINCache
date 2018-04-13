@@ -84,6 +84,8 @@ typedef id __nullable (^PINCacheReadBlock)(PINCache *cache, NSString *key, NSURL
  */
 + (instancetype)sharedCache;
 
+- (instancetype)init NS_UNAVAILABLE;
+
 /**
  Multiple instances with the same name are allowed and can safely access
  the same data on disk thanks to the magic of seriality. Also used to create the <diskCache>.
@@ -103,7 +105,7 @@ typedef id __nullable (^PINCacheReadBlock)(PINCache *cache, NSString *key, NSURL
  @param rootPath The path of the cache on disk.
  @result A new cache with the specified name.
  */
-- (instancetype)initWithName:(NSString *)name rootPath:(NSString *)rootPath NS_DESIGNATED_INITIALIZER;
+- (instancetype)initWithName:(NSString *)name rootPath:(NSString *)rootPath;
 
 #pragma mark -
 /// @name Asynchronous Methods

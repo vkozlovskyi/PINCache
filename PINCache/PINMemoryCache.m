@@ -54,7 +54,7 @@ NSString * const PINMemoryCachePrefix = @"com.pinterest.PINMemoryCache";
 {
     if (self = [super init]) {
         _lockSemaphore = dispatch_semaphore_create(1);
-        NSString *queueName = [[NSString alloc] initWithFormat:@"%@.%p", PINMemoryCachePrefix, self];
+        NSString *queueName = [[NSString alloc] initWithFormat:@"%@.%p", PINMemoryCachePrefix, (void *)self];
         _concurrentQueue = dispatch_queue_create([queueName UTF8String], DISPATCH_QUEUE_CONCURRENT);
 
         _dictionary = [[NSMutableDictionary alloc] init];

@@ -315,7 +315,10 @@ NSTimeInterval PINCacheTestBlockTimeout = 5.0;
     if (isiOS8OrGreater) {
         //sending didEnterBackgroundNotification causes crash on iOS 8.
         NSNotification *notification = [NSNotification notificationWithName:UIApplicationDidEnterBackgroundNotification object:nil];
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wundeclared-selector"
         [self.cache.memoryCache performSelector:@selector(didObserveApocalypticNotification:) withObject:notification];
+#pragma clang diagnostic pop
         
     } else {
         [[NSNotificationCenter defaultCenter] postNotificationName:UIApplicationDidEnterBackgroundNotification
